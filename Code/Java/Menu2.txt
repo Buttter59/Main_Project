@@ -1,0 +1,91 @@
+import java.util.Scanner;
+
+public class Menu2 {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int choice;
+
+        do {
+            // Display menu
+            System.out.println("\n===== MENU =====");
+            System.out.println("1. Grade Classification");
+            System.out.println("2. Age Classification");
+            System.out.println("3. Scholarship Evaluation");
+            System.out.println("4. Exit");
+            System.out.print("Enter your choice (1-4): ");
+            choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    // Case 1: Grade Classification
+                    System.out.print("Enter grade (0-100): ");
+                    int grade = scanner.nextInt();
+
+                    if (grade >= 95 && grade <= 100) {
+                        System.out.println("Classification: Outstanding");
+                    } else if (grade >= 90) {
+                        System.out.println("Classification: Excellent");
+                    } else if (grade >= 85) {
+                        System.out.println("Classification: Very Good");
+                    } else if (grade >= 75) {
+                        System.out.println("Classification: Satisfactory");
+                    } else if (grade >= 60) {
+                        System.out.println("Classification: Needs Improvement");
+                    } else if (grade >= 0) {
+                        System.out.println("Classification: Failed");
+                    } else {
+                        System.out.println("Invalid grade input.");
+                    }
+                    break;
+
+                case 2:
+                    // Case 2: Age Classification
+                    System.out.print("Enter age: ");
+                    int age = scanner.nextInt();
+
+                    if (age >= 60) {
+                        System.out.println("Classification: Senior Citizen");
+                    } else if (age >= 20) {
+                        System.out.println("Classification: Adult");
+                    } else if (age >= 13) {
+                        System.out.println("Classification: Teenager");
+                    } else if (age >= 0) {
+                        System.out.println("Classification: Child");
+                    } else {
+                        System.out.println("Invalid age input.");
+                    }
+                    break;
+
+                case 3:
+                    // Case 3: Scholarship Evaluation
+                    System.out.print("Enter grade (0-100): ");
+                    int scholarshipGrade = scanner.nextInt();
+
+                    System.out.print("Enter family income (in PHP): ");
+                    double income = scanner.nextDouble();
+
+                    if (scholarshipGrade >= 95 && income <= 20000) {
+                        System.out.println("Result: Full Scholarship");
+                    } else if (scholarshipGrade >= 90 && income <= 40000) {
+                        System.out.println("Result: Partial Scholarship");
+                    } else if (scholarshipGrade >= 85 && income <= 60000) {
+                        System.out.println("Result: Tuition Discount");
+                    } else {
+                        System.out.println("Result: Not Qualified");
+                    }
+                    break;
+
+                case 4:
+                    // Case 4: Exit
+                    System.out.println("Exiting program...");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice. Please select 1-4.");
+            }
+
+        } while (choice != 4);
+
+        scanner.close();
+    }
+}
