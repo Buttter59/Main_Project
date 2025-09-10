@@ -7,7 +7,7 @@ public class Atm {
         int balance = 1000;
 
         do {
-            System.out.println("----- ATM MENU -----");
+            System.out.println("----- ATM MENUs -----");
             System.out.println("1. Deposit\n2. Withdraw\n3. Check Balance\n4. Exit");
             System.out.print("Enter choice: ");
 
@@ -45,4 +45,5 @@ public class Atm {
             }
         } while (choice != 4);
     }
+
 }
