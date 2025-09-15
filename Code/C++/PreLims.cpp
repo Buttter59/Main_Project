@@ -36,7 +36,7 @@ int main (){
 
         
 
-        }//for x
+        }
         grandtotal += final_price;
         average = grandtotal / num_customer;
         cout << "Total Price: " << (ttl_percustomer) << endl;   
@@ -53,12 +53,13 @@ int main (){
         if(i == 2){num2 += final_price;}
         if(i == 3){num3 += final_price;}
         totalof3 = num1 + num2 + num3;
-    }//for i
+    }
     
     cout << "\nTotal of first 3 customers: "<< totalof3 <<endl;
     cout << "Grand Total: " << grandtotal << endl;
     cout << "Average total price: " << average<<endl;
     
+
 
 
 }
