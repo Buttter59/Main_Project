@@ -56,10 +56,10 @@ public class Menu {
 
             case 3:
             System.out.println("====== College Plan =====\n");
-            System.out.println("\t\tCollege Requirements:");
-            System.out.println("Full Scholarship: Grade 90 and above, Income of 50,000 above");
-            System.out.println("Partial Scholarship: Grade 90 and above, Income of 30,000 above");
-            System.out.println("Discount: Grade 95 and above, Income of 20,000 below");
+            System.out.println("College Requirements:");
+            System.out.println("Full Scholarship:     Grade 90 and above, Income of 50,000 above");
+            System.out.println("Partial Scholarship:  Grade 90 and above, Income of 30,000 above");
+            System.out.println("Discount:             Grade 95 and above, Income of 20,000 below");
             System.out.println("----------------------------------------------------------------");
 
 
@@ -96,3 +96,4 @@ public class Menu {
     }
 
 }
+
