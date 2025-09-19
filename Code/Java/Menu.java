@@ -43,10 +43,10 @@ public class Menu {
             if (age >= 60){
                 System.out.println(age + " - You are a Senior Citizen"); 
             }
-            if (age >= 18){
+            else if (age >= 18){
                 System.out.println(age + " - You are an Adult"); 
             }
-            if (age >= 13){
+            else if (age >= 13){
                 System.out.println(age + " - You are a Teenager"); 
             }
             else {
@@ -94,4 +94,5 @@ public class Menu {
     
 
     }
+
 }
