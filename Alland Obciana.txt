@@ -1,0 +1,31 @@
+1. Relational Database Management System (RDBMS)
+Definition:
+An RDBMS is a type of computer program that keeps data in tables like a spreadsheet. It helps us find, add or change data using somehing called SQL.
+Example:
+MySQL is one RDBMS. It is used for websites like WordPress.
+Reference:
+https://www.ibm.com/topics/relational-databases
+
+2. Database Instance
+Definition:
+A database instance is what runs in the background when we open a database. It uses memory and helps us work with the data.
+Example:
+When you start an Oracle database, it creates an instance to make the database work.
+Reference:
+https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/database-instances.html
+
+3. DBMS Architecture
+Definition:
+DBMS architecture means how a database system is built. It shows how people connect to the database.
+Example:
+In a 3 level system, the user talk to an app, and the app talks to the database.
+Reference:
+https://www.geeksforgeeks.org/dbms-architecture-2-level-3-level
+
+4. SQL Statements
+Definition:
+SQL statements are commands that tell the database what to do, like showing data or adding new data.
+Example:
+the code: SELECT * FROM students; This shows all the data in the "students" table.
+Reference:
+https://www.w3schools.com/sql/sql_syntax.asp
