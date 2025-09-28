@@ -1,31 +1,34 @@
+
+
+Paper View
 1. Relational Database Management System (RDBMS)
 Definition:
-An RDBMS is a type of computer program that keeps data in tables like a spreadsheet. It helps us find, add or change data using somehing called SQL.
+An RDBMS is a computer program that keeps data in tables, like a big spreadsheet. These tables can work together to help keep things neat and organized. We use something called SQL to ask the database to show us data, add new things, or make changes.
 Example:
-MySQL is one RDBMS. It is used for websites like WordPress.
+One RDBMS is called MySQL. It is used on websites like WordPress to help manage stuff like posts, users, and comments.
 Reference:
 https://www.ibm.com/topics/relational-databases
 
 2. Database Instance
 Definition:
-A database instance is what runs in the background when we open a database. It uses memory and helps us work with the data.
+A database instance is what starts running when we open a database. It works in the computer’s memory and helps the database do things like saving and finding data. It’s like the engine that makes the database actually work.
 Example:
-When you start an Oracle database, it creates an instance to make the database work.
+In Oracle, when you turn on the database, it creates an instance to help it run and let people use it.
 Reference:
 https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/database-instances.html
 
 3. DBMS Architecture
 Definition:
-DBMS architecture means how a database system is built. It shows how people connect to the database.
+DBMS architecture shows how a database system is built and how it works with other parts like apps or users. It tells us who talks to what. There are different layers, and the most common one has three levels: the user, the app, and the database.
 Example:
-In a 3 level system, the user talk to an app, and the app talks to the database.
+If you’re using a game app that saves your score, you are the user. The app talks to a server, and that server talks to the database that saves your score.
 Reference:
 https://www.geeksforgeeks.org/dbms-architecture-2-level-3-level
 
 4. SQL Statements
 Definition:
-SQL statements are commands that tell the database what to do, like showing data or adding new data.
+SQL statement are little instructions we give to the database. We use them to look at data, add new stuff, change things, or even delete stuff. SQL stands for Structured Query Language, but most people just call it SQL 
 Example:
-the code: SELECT * FROM students; This shows all the data in the "students" table.
+The code: SELECT * FROM students - it ask the database to show everything in the "students" table
 Reference:
 https://www.w3schools.com/sql/sql_syntax.asp
