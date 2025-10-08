@@ -1,0 +1,95 @@
+import java.util.Scanner;
+
+class Main {
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+        boolean condition = true;
+        //create a 4D array that performs for operations
+        
+        int book_borrowed = 0;
+ 
+        
+        
+        
+        do {
+            System.out.println("1. Library Book Borrowing");
+            System.out.println("2. Student Grades Recorder");
+            System.out.println("3. Employee Payroll");
+            System.out.println("4. Reports");
+            System.out.print("Enter number of choice: ");
+            int choice = input.nextInt();
+            System.out.println("");
+            
+           
+            switch (choice){
+                case 1:
+                    //Record how many books each person borrow from a list of books ("Math", "Programming", "Communication", "Science", "English")
+                    System.out.println("----- Library Book Borrowing -----");
+                    System.out.print("Borrow book for Math (1 or 0): ");
+                    int math = input.nextInt();
+                    if (math == 1){book_borrowed++;}
+                    System.out.print("Borrow book for Programming (1 or 0): ");
+                    int code = input.nextInt();
+                    if (code == 1){book_borrowed++;}
+                    System.out.print("Borrow book for Communication (1 or 0): ");
+                    int coms = input.nextInt();
+                    if (coms == 1){book_borrowed++;}
+                    System.out.print("Borrow book for Science (1 or 0): ");
+                    int scie = input.nextInt();
+                    if (scie == 1){book_borrowed++;}
+                    System.out.print("Borrow book for English (1 or 0): ");
+                    int eng = input.nextInt();
+                    if (eng == 1){book_borrowed++;}
+                    
+            
+            
+            
+            
+            
+            
+                int sum_math, sum_code, sum_coms, sum_scie, sum_eng;
+                case 2:
+                //Records and Calculate students grades in multiple subjects (atleast 3 studenst)
+                System.out.print("Enter number of students: ");
+                int num_person = input.nextInt();
+                for (int x = 0; x < num_person; x++){
+                    System.out.println("----- Student Grades Recorder -----");
+                    System.out.print("Enter grade in math for person " +x+": ");
+                    int grade_math = input.nextInt();
+                    sum_math += grade_math;
+                    System.out.print("Enter grade in Communication for person " +x+": ");
+                    int grade_coms = input.nextInt();
+                    sum_coms += grade_coms;
+                    System.out.print("Enter grade in Programming for person " +x+": ");
+                    int grade_code = input.nextInt();
+                    sum_code += grade_code;
+                    System.out.print("Enter grade in Science for person " +x+": ");
+                    int grade_scie = input.nextInt();
+                    sum_scie += grade_scie;
+                    System.out.print("Enter grade in English for person " +x+": ");
+                    int grade_eng = input.nextInt();
+                    sum_eng += grade_eng;
+                
+                }
+                int ave1, ave2, ave3, ave4, ave5;
+                ave1 = sum_math / num_person;
+                ave2 = sum_code / num_person;
+                ave3 = sum_coms / num_person;
+                ave4 = sum_scie / num_person;
+                ave5 =sum_eng / num_person;
+                System.out.println("Average for math: " + ave1);
+                System.out.println("Average for Programming: " + ave2);
+                System.out.println("Average for Communication: " + ave3);
+                System.out.println("Average for Science: " + ave4);
+                System.out.println("Average for English: " + ave5);
+                
+                case 3:
+                    System.out.println("----- Employee Payroll -----");
+                    //Records employee salaries and computes bonuses. (atleast 3 employee)
+                    
+                case 4: 
+                    //Reports Display summaries for each section andn a full report of all stored data
+            }       
+        }while(condition != false);
+    }
+}
