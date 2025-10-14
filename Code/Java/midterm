@@ -1,95 +1,118 @@
 import java.util.Scanner;
 
-class Main {
+public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
-        boolean condition = true;
-        //create a 4D array that performs for operations
-        
-        int book_borrowed = 0;
- 
-        
-        
-        
-        do {
+
+        // 4D array: [Section][Person][DataType][Value]
+        // We’ll simulate it by grouping the three features logically inside loops.
+        int[][][][] data = new int[3][3][3][5]; 
+        // [0] = Library, [1] = Grades, [2] = Payroll
+
+        boolean running = true;
+
+        while (running) {
+            System.out.println("===== MAIN MENU =====");
             System.out.println("1. Library Book Borrowing");
             System.out.println("2. Student Grades Recorder");
             System.out.println("3. Employee Payroll");
-            System.out.println("4. Reports");
-            System.out.print("Enter number of choice: ");
+            System.out.println("4. Exit");
+            System.out.print("Choose an option: ");
             int choice = input.nextInt();
-            System.out.println("");
-            
-           
-            switch (choice){
+            System.out.println();
+
+            switch (choice) {
                 case 1:
-                    //Record how many books each person borrow from a list of books ("Math", "Programming", "Communication", "Science", "English")
+                    // Library Book Borrowing
+                    String[] books = {"Math", "Programming", "Communication", "Science", "English"};
+                    int persons = 3;
+
                     System.out.println("----- Library Book Borrowing -----");
-                    System.out.print("Borrow book for Math (1 or 0): ");
-                    int math = input.nextInt();
-                    if (math == 1){book_borrowed++;}
-                    System.out.print("Borrow book for Programming (1 or 0): ");
-                    int code = input.nextInt();
-                    if (code == 1){book_borrowed++;}
-                    System.out.print("Borrow book for Communication (1 or 0): ");
-                    int coms = input.nextInt();
-                    if (coms == 1){book_borrowed++;}
-                    System.out.print("Borrow book for Science (1 or 0): ");
-                    int scie = input.nextInt();
-                    if (scie == 1){book_borrowed++;}
-                    System.out.print("Borrow book for English (1 or 0): ");
-                    int eng = input.nextInt();
-                    if (eng == 1){book_borrowed++;}
-                    
-            
-            
-            
-            
-            
-            
-                int sum_math, sum_code, sum_coms, sum_scie, sum_eng;
+                    for (int p = 0; p < persons; p++) {
+                        System.out.println("Person " + (p + 1) + ":");
+                        for (int b = 0; b < books.length; b++) {
+                            System.out.print("Borrow book " + books[b] + "? (1-Yes, 0-No): ");
+                            data[0][p][0][b] = input.nextInt();
+                        }
+                        System.out.println();
+                    }
+
+                    System.out.println("Borrowed Books Summary:");
+                    for (int p = 0; p < persons; p++) {
+                        System.out.println("Person " + (p + 1) + " borrowed:");
+                        for (int b = 0; b < books.length; b++) {
+                            if (data[0][p][0][b] == 1) {
+                                System.out.println("- " + books[b]);
+                            }
+                        }
+                        System.out.println();
+                    }
+                    break;
+
                 case 2:
-                //Records and Calculate students grades in multiple subjects (atleast 3 studenst)
-                System.out.print("Enter number of students: ");
-                int num_person = input.nextInt();
-                for (int x = 0; x < num_person; x++){
+                    // Student Grades Recorder
                     System.out.println("----- Student Grades Recorder -----");
-                    System.out.print("Enter grade in math for person " +x+": ");
-                    int grade_math = input.nextInt();
-                    sum_math += grade_math;
-                    System.out.print("Enter grade in Communication for person " +x+": ");
-                    int grade_coms = input.nextInt();
-                    sum_coms += grade_coms;
-                    System.out.print("Enter grade in Programming for person " +x+": ");
-                    int grade_code = input.nextInt();
-                    sum_code += grade_code;
-                    System.out.print("Enter grade in Science for person " +x+": ");
-                    int grade_scie = input.nextInt();
-                    sum_scie += grade_scie;
-                    System.out.print("Enter grade in English for person " +x+": ");
-                    int grade_eng = input.nextInt();
-                    sum_eng += grade_eng;
-                
-                }
-                int ave1, ave2, ave3, ave4, ave5;
-                ave1 = sum_math / num_person;
-                ave2 = sum_code / num_person;
-                ave3 = sum_coms / num_person;
-                ave4 = sum_scie / num_person;
-                ave5 =sum_eng / num_person;
-                System.out.println("Average for math: " + ave1);
-                System.out.println("Average for Programming: " + ave2);
-                System.out.println("Average for Communication: " + ave3);
-                System.out.println("Average for Science: " + ave4);
-                System.out.println("Average for English: " + ave5);
-                
+                    int students = 3;
+                    int subjects = 3;
+                    double[][] grades = new double[students][subjects];
+
+                    for (int s = 0; s < students; s++) {
+                        for (int subj = 0; subj < subjects; subj++) {
+                            System.out.print("Student " + (s + 1) + ", Subject " + (subj + 1) + " Grade: ");
+                            grades[s][subj] = input.nextDouble();
+                        }
+                    }
+
+                    System.out.println("\nGrades Report:");
+                    for (int s = 0; s < students; s++) {
+                        double total = 0;
+                        for (int subj = 0; subj < subjects; subj++) {
+                            total += grades[s][subj];
+                        }
+                        double average = total / subjects;
+                        System.out.printf("Student %d Average: %.2f -- %s\n", 
+                            (s + 1), average, (average >= 75 ? "Passed" : "Failed"));
+                    }
+                    System.out.println();
+                    break;
+
                 case 3:
+                    // Employee Payroll
                     System.out.println("----- Employee Payroll -----");
-                    //Records employee salaries and computes bonuses. (atleast 3 employee)
-                    
-                case 4: 
-                    //Reports Display summaries for each section andn a full report of all stored data
-            }       
-        }while(condition != false);
+                    String[] employees = {"Alice", "Bob", "Charlie"};
+                    double[] salary = new double[employees.length];
+                    double bonus = 2000.0;
+
+                    for (int e = 0; e < employees.length; e++) {
+                        System.out.print("Enter salary for " + employees[e] + ": ");
+                        salary[e] = input.nextDouble();
+                    }
+
+                    System.out.println("\nPayroll Report:");
+                    for (int e = 0; e < employees.length; e++) {
+                        System.out.println(employees[e] + ": " + salary[e] + " + Bonus: " + bonus);
+                    }
+                    System.out.println();
+                    break;
+
+                case 4:
+                    System.out.println("Exiting program...");
+                    running = false;
+                    break;
+
+                default:
+                    System.out.println("Invalid choice! Please select 1-4.\n");
+            }
+
+            if (running) {
+                System.out.print("Go back to MAIN MENU? (Y/N): ");
+                char again = input.next().charAt(0);
+                if (again == 'N' || again == 'n') {
+                    running = false;
+                    System.out.println("Program Ended.");
+                }
+                System.out.println();
+            }
+        }
     }
 }
