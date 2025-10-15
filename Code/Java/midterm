@@ -4,10 +4,8 @@ public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
 
-        // 4D array: [Section][Person][DataType][Value]
-        // We’ll simulate it by grouping the three features logically inside loops.
         int[][][][] data = new int[3][3][3][5]; 
-        // [0] = Library, [1] = Grades, [2] = Payroll
+ 
 
         boolean running = true;
 
@@ -23,9 +21,9 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    // Library Book Borrowing
+
                     String[] books = {"Math", "Programming", "Communication", "Science", "English"};
-                    int persons = 3;
+                    int persons = 1;
 
                     System.out.println("----- Library Book Borrowing -----");
                     for (int p = 0; p < persons; p++) {
@@ -50,9 +48,8 @@ public class Main {
                     break;
 
                 case 2:
-                    // Student Grades Recorder
                     System.out.println("----- Student Grades Recorder -----");
-                    int students = 3;
+                    int students = 2;
                     int subjects = 3;
                     double[][] grades = new double[students][subjects];
 
@@ -77,7 +74,6 @@ public class Main {
                     break;
 
                 case 3:
-                    // Employee Payroll
                     System.out.println("----- Employee Payroll -----");
                     String[] employees = {"Alice", "Bob", "Charlie"};
                     double[] salary = new double[employees.length];
