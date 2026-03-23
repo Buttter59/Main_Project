@@ -1,0 +1,148 @@
+import java.util.Arrays;
+import java.util.Scanner;
+
+class Main {
+    
+    public static void main(String[] args) {
+        int numpass = 0;
+        int heapSwaps = 0;
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter number of integers: ");
+        int size = scanner.nextInt();
+ 
+        int[] Arr = new int[size];
+        System.out.println("Enter numbers:");
+        for (int i = 0; i < size; i++) {
+            Arr[i] = scanner.nextInt();
+        }
+
+        System.out.println("Original Array: \n" + Arrays.toString(Arr) + "\n");
+
+        // COPY ARRAYS
+        int[] heapArr = new int[size];
+        int[] radixArr = new int[size];
+
+        for (int i = 0; i < size; i++) {
+            heapArr[i] = Arr[i];
+            radixArr[i] = Arr[i];
+        }
+
+        // ================= HEAP SORT =================
+        long startHeap = System.nanoTime();
+        heapSort(heapArr);
+        long endHeap = System.nanoTime();
+
+        System.out.println("\nMax Heap Built:");
+        System.out.println(Arrays.toString(heapArr));
+
+        for (int i = heapArr.length - 1, step = 1; i > 0; i--, step++) {
+            int tmp = heapArr[0];
+            heapArr[0] = heapArr[i];
+            heapArr[i] = tmp;
+            heapSwaps++;
+
+            heapify(heapArr, i, 0);
+
+            System.out.println("\nAfter Extraction " + step + ":");
+            System.out.println(Arrays.toString(heapArr));
+        }
+
+        // ================= RADIX SORT =================
+        long startRadix = System.nanoTime();
+        numpass = radixSort(radixArr);
+        long endRadix = System.nanoTime();
+
+        System.out.println("\nFinal Heap Sorted Array: " + Arrays.toString(heapArr));
+        System.out.println("Final Radix Sorted Array: " + Arrays.toString(radixArr));
+
+        long heapTime = endHeap - startHeap;
+        long radixTime = endRadix - startRadix;
+
+        System.out.println("\nHeap Sort Time:  " + heapTime + "ns");
+        System.out.println("Radix Sort Time:  " + radixTime + "ns");
+
+        if (heapTime < radixTime)
+            System.out.println("\nFaster Algorithm: Heap Sort");
+        else
+            System.out.println("\nFaster Algorithm: Radix Sort");
+
+        System.out.println("\nTotal Heap Swaps: " + heapSwaps);
+        System.out.println("Total Radix Passes: " + numpass);
+
+        System.out.println("\nAnalysis:\nRadix sort is usually faster when numbers have few digits.");
+        
+        System.out.println("\n=== Code Execution Successful ===");
+    }
+    
+    // ================= HEAP SORT =================
+    static void heapify(int[] arr, int n, int i){
+        int largest = i;
+        int l = 2 * i + 1;
+        int r = 2 * i + 2;
+
+        if (l < n && arr[l] > arr[largest])
+            largest = l;
+        if (r < n && arr[r] > arr[largest])
+            largest = r;
+
+        if (largest != i) {
+            int tmp = arr[i];
+            arr[i] = arr[largest];
+            arr[largest] = tmp;
+            heapify(arr, n, largest);
+        }
+    }
+            
+    static void heapSort(int[] arr) {
+        int n = arr.length;
+
+        for (int i = n/2 - 1; i >= 0; i--)
+            heapify(arr, n, i);
+    }
+
+    // ================= RADIX SORT =================
+    static int radixSort(int[] Arr) {
+        int passes = 0;
+        int max = Arrays.stream(Arr).max().getAsInt();
+
+        for (int exp = 1; max/exp > 0; exp *= 10) {
+            passes++;
+
+            if (passes == 1)
+                System.out.println("\nPass 1 (Units)");
+            else if (passes == 2)
+                System.out.println("\nPass 2 (Tens)");
+            else
+                System.out.println("\nPass " + passes);
+
+            System.out.println("Before: " + Arrays.toString(Arr));
+            countingSort(Arr, exp);
+            System.out.println("After: " + Arrays.toString(Arr));
+        }
+
+        System.out.println("\nFinal Radix Sorted Array: " + Arrays.toString(Arr));
+        return passes;
+    }
+
+    static void countingSort(int[] Arr, int exp) {
+        int n = Arr.length;
+        int[] output = new int[n];
+        int[] count = new int[10];
+
+        for (int i = 0; i < n; i++)
+            count[(Arr[i]/exp) % 10]++;
+
+        for (int i = 1; i < 10; i++)
+            count[i] += count[i-1];
+
+        for (int i = n - 1; i >= 0; i--) {
+            output[count[(Arr[i]/exp) % 10] - 1] = Arr[i];
+            count[(Arr[i]/exp) % 10]--;
+        }
+
+        for (int i = 0; i < n; i++)
+            Arr[i] = output[i];
+    }
+}
