@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Serpent — Snake Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:#0a0a0a; --surface:#131313; --surface2:#1a1a1a;
+    --border:#242424; --border2:#2e2e2e;
+    --green:#4ADE80; --green-dark:#22C55E; --green-dim:rgba(74,222,128,0.12);
+    --red:#F87171; --text:#f0f0f0; --muted:#666; --muted2:#444; --gold:#FCD34D;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bot:env(safe-area-inset-bottom,0px);
+    --dp-size:56px; --dp-gap:5px; --dp-icon:22px;
+  }
+
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Syne',system-ui,sans-serif; color:var(--text); touch-action:none; }
+
+  /* ── SCREENS ── */
+  .screen {
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.3s ease;
+    padding-top:var(--safe-top); padding-bottom:var(--safe-bot);
+  }
+  .screen.active { opacity:1; pointer-events:all; }
+
+  /* ── LOADING ── */
+  #screen-loading { gap:clamp(14px,3vh,28px); }
+  .logo-mark {
+    width:clamp(68px,14vw,96px); height:clamp(68px,14vw,96px);
+    border-radius:clamp(16px,3vw,24px);
+    background:var(--green-dim); border:1.5px solid var(--green);
+    display:flex; align-items:center; justify-content:center;
+    animation:logoPulse 2s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,0.25);}
+    50%    {box-shadow:0 0 0 14px rgba(74,222,128,0);}
+  }
+  .logo-snake { display:grid; grid-template-columns:repeat(3,13px); grid-template-rows:repeat(3,13px); gap:3px; }
+  .ls { background:var(--green); border-radius:3px; }
+  .ls.head { background:var(--green-dark); }
+  .ls.off  { background:transparent; }
+  .logo-title { font-size:clamp(26px,6vw,40px); font-weight:800; letter-spacing:-1px; }
+  .logo-title span { color:var(--green); }
+  .logo-sub { font-size:clamp(10px,2vw,13px); font-weight:500; letter-spacing:3px; text-transform:uppercase; color:var(--muted); }
+  .load-bar-wrap { width:clamp(130px,35vw,200px); height:3px; background:var(--surface2); border-radius:99px; overflow:hidden; }
+  .load-bar { height:100%; background:var(--green); border-radius:99px; width:0%; transition:width 0.05s linear; }
+  .load-text { font-size:11px; color:var(--muted); letter-spacing:1px; font-family:'DM Mono',monospace; }
+
+  /* ── MENU ── */
+  .menu-wrap { width:min(340px,88vw); display:flex; flex-direction:column; align-items:center; gap:clamp(8px,1.8vh,14px); }
+  .menu-logo-row { display:flex; align-items:center; gap:12px; margin-bottom:clamp(6px,1.2vh,14px); }
+  .logo-mark-sm { width:44px; height:44px; border-radius:12px; background:var(--green-dim); border:1px solid rgba(74,222,128,0.4); display:flex; align-items:center; justify-content:center; }
+  .logo-snake-sm { display:grid; grid-template-columns:repeat(3,7px); grid-template-rows:repeat(3,7px); gap:1.5px; }
+  .lss { background:var(--green); border-radius:2px; }
+  .lss.head { background:var(--green-dark); }
+  .lss.off  { background:transparent; }
+  .menu-title { font-size:clamp(22px,5vw,30px); font-weight:800; letter-spacing:-0.5px; }
+  .menu-title span { color:var(--green); }
+  .best-badge { background:var(--green-dim); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:10px 20px; text-align:center; width:100%; }
+  .best-badge-label { font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:2px; }
+  .best-badge-val { font-size:clamp(22px,5vw,30px); font-weight:800; color:var(--green); font-family:'DM Mono',monospace; }
+  .menu-btn { width:100%; padding:clamp(12px,2.2vh,16px); border-radius:12px; border:none; cursor:pointer; font-family:'Syne',sans-serif; font-size:clamp(14px,3vw,17px); font-weight:700; transition:transform 0.1s,opacity 0.1s; }
+  .menu-btn:active { transform:scale(0.97); opacity:0.85; }
+  .btn-play    { background:var(--green); color:#051a0a; }
+  .btn-scores  { background:var(--surface2); color:var(--text); border:1px solid var(--border2); }
+  .btn-settings{ background:var(--surface2); color:var(--text); border:1px solid var(--border2); }
+  .menu-version{ font-size:11px; color:var(--muted2); letter-spacing:1px; font-family:'DM Mono',monospace; }
+
+  /* ── GAME ── */
+  #screen-game { justify-content:flex-start; overflow:hidden; }
+  .game-inner { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; padding:clamp(8px,2vw,16px); gap:clamp(5px,1vh,10px); }
+
+  /* === DESKTOP: side layout === */
+  @media (min-width:700px) and (min-height:500px) {
+    .game-inner { flex-direction:row; justify-content:center; align-items:center; gap:clamp(16px,2.5vw,40px); flex-wrap:nowrap; }
+    #mobile-topbar { display:none !important; }
+    .game-left  { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .game-right { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+    .desktop-topbar { display:flex !important; }
+    .score-stack { display:flex !important; }
+  }
+  /* === MOBILE: stacked layout === */
+  @media (max-width:699px),(max-height:499px) {
+    #mobile-topbar { display:flex !important; }
+    .game-left  { display:contents; }
+    .game-right { display:contents; }
+    .desktop-topbar { display:none !important; }
+    .score-stack { display:none !important; }
+  }
+
+  /* mobile top bar */
+  #mobile-topbar { width:100%; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  /* desktop top bar above canvas */
+  .desktop-topbar { display:none; width:100%; align-items:center; justify-content:space-between; gap:10px; }
+
+  .top-btn {
+    min-width:clamp(36px,6vw,44px); height:clamp(36px,5.5vw,42px);
+    padding:0 10px;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:10px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:clamp(13px,2.5vw,16px); color:var(--muted); transition:background 0.15s;
+    white-space:nowrap;
+  }
+  .top-btn:hover  { background:var(--border); }
+  .top-btn:active { transform:scale(0.93); }
+
+  .score-row { display:flex; gap:clamp(5px,1vw,10px); }
+  .score-pill { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:clamp(4px,1vh,8px) clamp(8px,1.5vw,16px); text-align:center; min-width:clamp(54px,11vw,84px); }
+  .score-pill-label { font-size:clamp(9px,1.5vw,11px); color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+  .score-pill-val   { font-size:clamp(15px,3vw,21px); font-weight:700; color:var(--text); font-family:'DM Mono',monospace; }
+  .score-pill-val.live { color:var(--green); }
+
+  /* desktop vertical score stack */
+  .score-stack { flex-direction:column; gap:8px; width:160px; display:none; }
+  .score-stack .score-pill { width:100%; min-width:unset; }
+
+  .canvas-wrap { position:relative; flex-shrink:0; }
+  #canvas { display:block; border-radius:clamp(10px,2vw,16px); border:1px solid var(--border2); background:#0d0d0d; }
+
+  #overlay {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px;
+    border-radius:inherit; background:rgba(0,0,0,0.75); backdrop-filter:blur(3px);
+  }
+  #overlay.hidden { display:none; }
+  .overlay-title       { font-size:clamp(18px,4vw,28px); font-weight:800; color:#fff; }
+  .overlay-sub         { font-size:clamp(11px,2vw,14px); color:rgba(255,255,255,0.5); text-align:center; padding:0 14px; line-height:1.6; }
+  .overlay-score       { font-size:clamp(28px,7vw,48px); font-weight:800; color:var(--green); font-family:'DM Mono',monospace; }
+  .overlay-score-label { font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:-5px; }
+  .new-best-badge      { background:var(--gold); color:#3a2500; font-size:11px; font-weight:700; padding:4px 12px; border-radius:99px; }
+  .overlay-btns { display:flex; gap:10px; }
+  .overlay-btn {
+    padding:clamp(10px,1.8vh,14px) clamp(18px,3vw,30px);
+    border-radius:10px; border:none; cursor:pointer;
+    font-family:'Syne',sans-serif; font-size:clamp(13px,2.5vw,16px); font-weight:700;
+    transition:transform 0.1s;
+  }
+  .overlay-btn:active { transform:scale(0.95); }
+  .obtn-play { background:var(--green); color:#051a0a; }
+  .obtn-menu { background:var(--surface2); color:var(--text); border:1px solid var(--border2); }
+
+  /* ── D-PAD ── */
+  #dpad { display:grid; grid-template-columns:repeat(3,var(--dp-size)); grid-template-rows:repeat(3,var(--dp-size)); gap:var(--dp-gap); flex-shrink:0; }
+  .dp {
+    background:var(--surface2); border:1px solid var(--border2);
+    border-radius:clamp(10px,2vw,14px); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:var(--dp-icon); color:var(--text);
+    user-select:none; touch-action:manipulation;
+    transition:background 0.08s, transform 0.08s;
+  }
+  .dp:active { background:var(--border2); transform:scale(0.89); }
+  .dp-center { background:transparent; border:none; pointer-events:none; }
+
+  /* ── SCORES & SETTINGS ── */
+  .page-outer { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; padding-bottom:clamp(16px,4vh,32px); scrollbar-width:none; }
+  .page-outer::-webkit-scrollbar { display:none; }
+  .page-wrap { width:min(480px,94vw); display:flex; flex-direction:column; gap:14px; padding:clamp(12px,3vh,24px) 0; }
+  .page-header { display:flex; align-items:center; gap:14px; }
+  .back-btn { width:38px; height:38px; flex-shrink:0; background:var(--surface2); border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--muted); transition:background 0.15s; }
+  .back-btn:hover  { background:var(--border); }
+  .back-btn:active { transform:scale(0.95); }
+  .page-title { font-size:clamp(18px,4vw,24px); font-weight:800; }
+  .scores-list { display:flex; flex-direction:column; gap:8px; }
+  .score-row-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:14px; }
+  .score-rank { width:34px; height:34px; border-radius:9px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--muted); flex-shrink:0; }
+  .score-rank.gold   { background:rgba(252,211,77,0.15); color:var(--gold); }
+  .score-rank.silver { background:rgba(200,200,200,0.1); color:#ccc; }
+  .score-rank.bronze { background:rgba(205,127,50,0.15); color:#cd7f32; }
+  .score-info { flex:1; }
+  .score-difficulty { font-size:11px; color:var(--muted); margin-bottom:2px; }
+  .score-points { font-size:clamp(15px,3vw,20px); font-weight:700; font-family:'DM Mono',monospace; color:var(--green); }
+  .score-date { font-size:11px; color:var(--muted2); font-family:'DM Mono',monospace; }
+  .empty-state { text-align:center; padding:48px 20px; color:var(--muted); font-size:14px; line-height:1.8; }
+  .empty-icon  { font-size:44px; margin-bottom:12px; }
+  .clear-btn { padding:13px; width:100%; border-radius:10px; border:1px solid var(--border2); background:var(--surface2); color:var(--muted); font-family:'Syne',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:color 0.2s,border-color 0.2s; }
+  .clear-btn:hover  { color:var(--red); border-color:rgba(248,113,113,0.3); }
+  .clear-btn:active { transform:scale(0.98); }
+
+  .settings-section { display:flex; flex-direction:column; gap:6px; }
+  .settings-section-label { font-size:11px; font-weight:500; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; padding:0 2px; }
+  .settings-group { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .settings-row { display:flex; align-items:center; gap:12px; padding:clamp(10px,1.8vh,16px) 16px; border-bottom:1px solid var(--border); }
+  .settings-row:last-child { border-bottom:none; }
+  .settings-row-icon { width:36px; height:36px; border-radius:9px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .settings-row-text { flex:1; min-width:0; }
+  .settings-row-title { font-size:clamp(13px,2.5vw,15px); font-weight:500; }
+  .settings-row-sub   { font-size:11px; color:var(--muted); margin-top:2px; }
+  .settings-control   { flex-shrink:0; }
+  .speed-control { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; max-width:200px; }
+  .speed-chip { padding:6px 9px; border-radius:8px; border:1px solid var(--border2); background:var(--surface2); font-family:'Syne',sans-serif; font-size:clamp(10px,1.8vw,12px); font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.15s; }
+  .speed-chip.active { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+  .toggle { width:44px; height:26px; border-radius:13px; background:var(--border2); border:none; position:relative; cursor:pointer; transition:background 0.2s; }
+  .toggle.on { background:var(--green); }
+  .toggle-thumb { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform 0.2s; }
+  .toggle.on .toggle-thumb { transform:translateX(18px); }
+  .color-swatches { display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
+  .swatch { width:26px; height:26px; border-radius:7px; cursor:pointer; border:2px solid transparent; transition:border-color 0.15s,transform 0.1s; }
+  .swatch.active { border-color:#fff; transform:scale(1.12); }
+  .size-chips { display:flex; gap:5px; }
+  .size-chip { padding:6px 9px; border-radius:8px; border:1px solid var(--border2); background:var(--surface2); font-family:'Syne',sans-serif; font-size:clamp(10px,1.8vw,12px); font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.15s; }
+  .size-chip.active { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+
+  @keyframes fadeSlideUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  .anim-in { animation:fadeSlideUp 0.3s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADING ═══ -->
+<div class="screen active" id="screen-loading">
+  <div class="logo-mark">
+    <div class="logo-snake">
+      <div class="ls off"></div><div class="ls"></div><div class="ls off"></div>
+      <div class="ls head"></div><div class="ls"></div><div class="ls off"></div>
+      <div class="ls off"></div><div class="ls"></div><div class="ls"></div>
+    </div>
+  </div>
+  <div style="text-align:center">
+    <div class="logo-title">Uod</div>
+    <div class="logo-sub">Snake Game</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+    <div class="load-text" id="load-text">Initializing...</div>
+  </div>
+</div>
+
+<!-- ═══ MENU ═══ -->
+<div class="screen" id="screen-menu">
+  <div class="menu-wrap">
+    <div class="menu-logo-row">
+      <div class="logo-mark-sm">
+        <div class="logo-snake-sm">
+          <div class="lss off"></div><div class="lss"></div><div class="lss off"></div>
+          <div class="lss head"></div><div class="lss"></div><div class="lss off"></div>
+          <div class="lss off"></div><div class="lss"></div><div class="lss"></div>
+        </div>
+      </div>
+      <div class="menu-title">Uod</div>
+    </div>
+    <div class="best-badge">
+      <div class="best-badge-label">All-time Best</div>
+      <div class="best-badge-val" id="menu-best">0</div>
+    </div>
+    <button class="menu-btn btn-play"     onclick="startGame()">▶  Play</button>
+    <button class="menu-btn btn-scores"   onclick="showScreen('scores')">🏆  High Scores</button>
+    <button class="menu-btn btn-settings" onclick="showScreen('settings')">⚙  Settings</button>
+    <div class="menu-version">v1.0.0 · serpent</div>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div class="screen" id="screen-game">
+  <div class="game-inner" id="game-inner">
+
+    <!-- mobile top bar -->
+    <div id="mobile-topbar" style="display:none; width:100%; flex-shrink:0; align-items:center; justify-content:space-between;">
+      <div class="top-btn" onclick="pauseGame()" id="pause-btn">⏸</div>
+      <div class="score-row">
+        <div class="score-pill"><div class="score-pill-label">Score</div><div class="score-pill-val live" id="g-score">0</div></div>
+        <div class="score-pill"><div class="score-pill-label">Best</div><div class="score-pill-val" id="g-best">0</div></div>
+        <div class="score-pill"><div class="score-pill-label">Length</div><div class="score-pill-val" id="g-len">3</div></div>
+      </div>
+      <div class="top-btn" onclick="showScreen('menu')">✕</div>
+    </div>
+
+    <!-- left col: canvas -->
+    <div class="game-left">
+      <div class="desktop-topbar" id="desktop-topbar" style="display:none; width:100%; align-items:center; justify-content:space-between;">
+        <div class="top-btn" onclick="showScreen('menu')">✕ Menu</div>
+        <div class="top-btn" onclick="pauseGame()" id="pause-btn-d">⏸ Pause</div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+        <div id="overlay">
+          <div class="overlay-title" id="ov-title">Ready?</div>
+          <div class="overlay-score" id="ov-score" style="display:none">0</div>
+          <div class="overlay-score-label" id="ov-score-label" style="display:none">POINTS</div>
+          <div class="new-best-badge" id="ov-newbest" style="display:none">🏆 New Best!</div>
+          <div class="overlay-sub" id="ov-sub">Press Play or Space to begin</div>
+          <div class="overlay-btns">
+            <button class="overlay-btn obtn-play" id="ov-play-btn" onclick="resetGame()">Play</button>
+            <button class="overlay-btn obtn-menu" onclick="showScreen('menu')">Menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right col: score stack + dpad -->
+    <div class="game-right">
+      <div class="score-stack" id="desktop-score-stack">
+        <div class="score-pill"><div class="score-pill-label">Score</div><div class="score-pill-val live" id="g-score-d">0</div></div>
+        <div class="score-pill"><div class="score-pill-label">Best</div><div class="score-pill-val" id="g-best-d">0</div></div>
+        <div class="score-pill"><div class="score-pill-label">Length</div><div class="score-pill-val" id="g-len-d">3</div></div>
+      </div>
+      <div id="dpad">
+        <div></div>
+        <div class="dp" id="dp-up">↑</div>
+        <div></div>
+        <div class="dp" id="dp-left">←</div>
+        <div class="dp dp-center"></div>
+        <div class="dp" id="dp-right">→</div>
+        <div></div>
+        <div class="dp" id="dp-down">↓</div>
+        <div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ HIGH SCORES ═══ -->
+<div class="screen" id="screen-scores">
+  <div class="page-outer">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div class="back-btn" onclick="showScreen('menu')">←</div>
+        <div class="page-title">High Scores</div>
+      </div>
+      <div class="scores-list" id="scores-list"></div>
+      <button class="clear-btn" onclick="clearScores()">Clear All Scores</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="screen" id="screen-settings">
+  <div class="page-outer">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div class="back-btn" onclick="showScreen('menu')">←</div>
+        <div class="page-title">Settings</div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Gameplay</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-row-icon">⚡</div>
+            <div class="settings-row-text">
+              <div class="settings-row-title">Speed</div>
+              <div class="settings-row-sub" id="speed-sub">Normal — 110ms per tick</div>
+            </div>
+            <div class="settings-control">
+              <div class="speed-control">
+                <div class="speed-chip active" data-speed="0" onclick="setSpeed(0)">Slow</div>
+                <div class="speed-chip"        data-speed="1" onclick="setSpeed(1)">Normal</div>
+                <div class="speed-chip"        data-speed="2" onclick="setSpeed(2)">Fast</div>
+                <div class="speed-chip"        data-speed="3" onclick="setSpeed(3)">Turbo</div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-icon">🌀</div>
+            <div class="settings-row-text">
+              <div class="settings-row-title">Wrap Walls</div>
+              <div class="settings-row-sub">Pass through walls and reappear</div>
+            </div>
+            <div class="settings-control">
+              <div class="toggle" id="toggle-wrap" onclick="toggleWrap()"><div class="toggle-thumb"></div></div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-icon">📐</div>
+            <div class="settings-row-text">
+              <div class="settings-row-title">Grid Size</div>
+              <div class="settings-row-sub" id="grid-sub">20×20 cells</div>
+            </div>
+            <div class="settings-control">
+              <div class="size-chips">
+                <div class="size-chip"        data-grid="15" onclick="setGrid(15)">Small</div>
+                <div class="size-chip active" data-grid="20" onclick="setGrid(20)">Medium</div>
+                <div class="size-chip"        data-grid="25" onclick="setGrid(25)">Large</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Visuals</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-row-icon">🎨</div>
+            <div class="settings-row-text">
+              <div class="settings-row-title">Snake Color</div>
+              <div class="settings-row-sub">Choose your look</div>
+            </div>
+            <div class="settings-control">
+              <div class="color-swatches" id="color-swatches"></div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-icon">#</div>
+            <div class="settings-row-text">
+              <div class="settings-row-title">Show Grid</div>
+              <div class="settings-row-sub">Display grid lines on the board</div>
+            </div>
+            <div class="settings-control">
+              <div class="toggle on" id="toggle-grid" onclick="toggleGrid()"><div class="toggle-thumb"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Audio</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-row-icon">🔊</div>
+            <div class="settings-row-text">
+              <div class="settings-row-title">Sound Effects</div>
+              <div class="settings-row-sub">Eat and game over sounds</div>
+            </div>
+            <div class="settings-control">
+              <div class="toggle on" id="toggle-sound" onclick="toggleSound()"><div class="toggle-thumb"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ CONFIG ═══ */
+const cfg={speed:0,wrapWalls:false,gridSize:20,showGrid:true,sound:true,colorIdx:0};
+const SPEEDS      =[160,110,70,40];
+const SPEED_NAMES =['Slow','Normal','Fast','Turbo'];
+const SPEED_DESCS =['Slow — 160ms per tick','Normal — 110ms per tick','Fast — 70ms per tick','Turbo — 40ms per tick'];
+const COLORS=[
+  {snake:'#FF7F00', head:'#FFAA00', label:'Naruto'},    // Orange - Naruto's color
+  {snake:'#F4D35E', head:'#F9A03F', label:'Goku'},      // Yellow/Orange - Goku's aura
+  {snake:'#FF6F61', head:'#FFB3AB', label:'Luffy'},     // Red - Luffy's shirt
+  {snake:'#E03C31', head:'#B22234', label:'Mario'},     // Red - Mario's outfit
+  {snake:'#1E90FF', head:'#104E8B', label:'Sonic'},     // Blue - added Sonic for variety
+  {snake:'#FFD700', head:'#FFC300', label:'Pikachu'},   // Yellow - Pikachu for fun
+  {snake:'#A0522D', head:'#8B4513', label:'Worm'},      // Worm Original
+  
+];
+
+let scores=[],snake,dir,nextDir,food,score=0;
+let gameRunning=false,gamePaused=false,gameLoop;
+let COLS,ROWS,CS,CANVAS_PX;
+
+/* ═══ RESPONSIVE SIZING ═══ */
+function isDesktop(){ return window.innerWidth>=700 && window.innerHeight>=500; }
+function clamp(min,v,max){ return Math.max(min,Math.min(max,v)); }
+
+function computeLayout(){
+  const vw=window.innerWidth, vh=window.innerHeight;
+  if(isDesktop()){
+    /* desktop: canvas is the tallest thing, bounded by viewport */
+    CANVAS_PX=clamp(260, Math.min(Math.floor(vh*0.78),Math.floor(vw*0.55)), 580);
+    const dpBtn=clamp(48,Math.floor(CANVAS_PX*0.115),70);
+    return{dpBtn,dpGap:6,dpIcon:clamp(18,Math.floor(dpBtn*0.42),28)};
+  } else {
+    /* mobile: leave room for topbar (~50px) + dpad + gaps */
+    const pad=16;
+    const topH=50, gapH=30;
+    /* dpad: 3 buttons + 2 gaps; target ~38-52px buttons */
+    const dpBtn=clamp(38,Math.floor((vw-pad*2-10)/3),58);
+    const dpadH=dpBtn*3+12;
+    const available=vh-topH-dpadH-gapH-pad*2;
+    CANVAS_PX=clamp(220,Math.min(vw-pad*2,available),480);
+    return{dpBtn,dpGap:5,dpIcon:clamp(16,Math.floor(dpBtn*0.44),24)};
+  }
+}
+
+function applyLayout(){
+  const layout=computeLayout();
+  const root=document.documentElement;
+  root.style.setProperty('--dp-size',layout.dpBtn+'px');
+  root.style.setProperty('--dp-gap', layout.dpGap+'px');
+  root.style.setProperty('--dp-icon',layout.dpIcon+'px');
+
+  /* show/hide correct bars */
+  const mob=document.getElementById('mobile-topbar');
+  const desk=document.getElementById('desktop-topbar');
+  const stack=document.getElementById('desktop-score-stack');
+  if(isDesktop()){
+    mob.style.display='none';
+    desk.style.display='flex';
+    stack.style.display='flex';
+  } else {
+    mob.style.display='flex';
+    desk.style.display='none';
+    stack.style.display='none';
+  }
+}
+
+function initCanvas(){
+  applyLayout();
+  COLS=cfg.gridSize; ROWS=cfg.gridSize;
+  CS=Math.floor(CANVAS_PX/COLS);
+  CANVAS_PX=CS*COLS;
+  const c=document.getElementById('canvas');
+  c.width=CANVAS_PX; c.height=CANVAS_PX;
+}
+
+window.addEventListener('resize',()=>{
+  if(document.getElementById('screen-game').classList.contains('active')){
+    initCanvas();
+    if(snake) drawBoard();
+  }
+});
+
+/* ═══ STORAGE ═══ */
+function loadData(){
+  try{
+    const s=JSON.parse(localStorage.getItem('serpent_scores')||'[]');
+    scores=Array.isArray(s)?s:[];
+    const c=JSON.parse(localStorage.getItem('serpent_cfg')||'{}');
+    Object.assign(cfg,c);
+  }catch(e){scores=[];}
+}
+function saveScores(){try{localStorage.setItem('serpent_scores',JSON.stringify(scores));}catch(e){}}
+function saveCfg()   {try{localStorage.setItem('serpent_cfg',JSON.stringify(cfg));}catch(e){}}
+
+/* ═══ AUDIO ═══ */
+let audioCtx;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function beep(freq,dur,type='square',vol=0.08){
+  if(!cfg.sound)return;
+  try{
+    const ctx=getAudio(),o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    o.start();o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+function playEat()  {beep(520,0.08);}
+function playDie()  {beep(180,0.35,'sawtooth',0.1);}
+function playStart(){beep(440,0.07);setTimeout(()=>beep(660,0.1),80);}
+
+/* ═══ SCREENS ═══ */
+function showScreen(id){
+  if(gameRunning&&!gamePaused&&id!=='game'){clearInterval(gameLoop);gameRunning=false;}
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+id);
+  el.classList.add('active','anim-in');
+  setTimeout(()=>el.classList.remove('anim-in'),350);
+  if(id==='menu')    refreshMenu();
+  if(id==='scores')  renderScores();
+  if(id==='settings')applySettingsUI();
+}
+
+/* ═══ LOADING ═══ */
+const LOAD_MSGS=['Initializing...','Loading assets...','Setting up board...','Calibrating speed...','Almost ready...','Done!'];
+let loadP=0;
+function animateLoad(){
+  const bar=document.getElementById('load-bar'),txt=document.getElementById('load-text');
+  const step=()=>{
+    loadP+=Math.random()*18+5;if(loadP>100)loadP=100;
+    bar.style.width=loadP+'%';
+    txt.textContent=LOAD_MSGS[Math.min(Math.floor(loadP/100*LOAD_MSGS.length),LOAD_MSGS.length-1)];
+    if(loadP<100)setTimeout(step,120+Math.random()*80);
+    else setTimeout(()=>showScreen('menu'),400);
+  };
+  setTimeout(step,300);
+}
+
+/* ═══ MENU ═══ */
+function refreshMenu(){
+  const best=scores.length?Math.max(...scores.map(s=>s.score)):0;
+  document.getElementById('menu-best').textContent=best;
+  setBestDisplay(best);
+}
+function setBestDisplay(best){
+  ['g-best','g-best-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=best;});
+}
+
+/* ═══ GAME ═══ */
+function startGame(){
+  showScreen('game');
+  initCanvas();
+  spawnSnake();
+  score=0;gameRunning=false;gamePaused=false;
+  food=rndFood();
+  updateHUD();drawBoard();showOverlay('ready');
+  setPauseTxt('⏸');
+  document.getElementById('ov-play-btn').onclick=resetGame;
+}
+
+function spawnSnake(){
+  const cx=Math.floor(COLS/2),cy=Math.floor(ROWS/2);
+  snake=[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+  dir={x:1,y:0};nextDir={x:1,y:0};
+}
+
+function resetGame(){
+  clearInterval(gameLoop);
+  spawnSnake();
+  score=0;gameRunning=true;gamePaused=false;
+  food=rndFood();
+  updateHUD();hideOverlay();drawBoard();playStart();
+  setPauseTxt('⏸');
+  gameLoop=setInterval(tick,SPEEDS[cfg.speed]);
+}
+
+function pauseGame(){
+  if(!gameRunning)return;
+  if(gamePaused){
+    gamePaused=false;hideOverlay();playStart();
+    setPauseTxt('⏸');
+    gameLoop=setInterval(tick,SPEEDS[cfg.speed]);
+  }else{
+    gamePaused=true;clearInterval(gameLoop);
+    showOverlay('paused');setPauseTxt('▶');
+  }
+}
+
+function setPauseTxt(t){
+  ['pause-btn','pause-btn-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=isDesktop()?t+' '+(t==='⏸'?'Pause':'Resume'):t;});
+}
+
+/* ═══ GAME LOOP ═══ */
+function rndFood(){
+  let pos;
+  do{pos={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}
+  while(snake.some(s=>s.x===pos.x&&s.y===pos.y));
+  return pos;
+}
+
+function tick(){
+  dir={...nextDir};
+  let nx=snake[0].x+dir.x,ny=snake[0].y+dir.y;
+  if(cfg.wrapWalls){nx=(nx+COLS)%COLS;ny=(ny+ROWS)%ROWS;}
+  else if(nx<0||nx>=COLS||ny<0||ny>=ROWS){endGame();return;}
+  if(snake.some(s=>s.x===nx&&s.y===ny)){endGame();return;}
+  snake.unshift({x:nx,y:ny});
+  if(nx===food.x&&ny===food.y){score++;playEat();food=rndFood();}
+  else snake.pop();
+  updateHUD();drawBoard();
+}
+
+function endGame(){
+  clearInterval(gameLoop);gameRunning=false;playDie();
+  const prevBest=scores.length?Math.max(...scores.map(s=>s.score)):0;
+  const isNew=score>0&&score>=prevBest;
+  scores.unshift({score,speed:SPEED_NAMES[cfg.speed],grid:cfg.gridSize+'x'+cfg.gridSize,date:new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})});
+  scores=scores.slice(0,20);saveScores();
+  const newBest=Math.max(...scores.map(s=>s.score));
+  setBestDisplay(newBest);
+  showOverlay('gameover',isNew);
+}
+
+/* ═══ HUD ═══ */
+function updateHUD(){
+  ['g-score','g-score-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=score;});
+  ['g-len','g-len-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=snake.length;});
+}
+
+/* ═══ OVERLAY ═══ */
+function showOverlay(type,isNewBest){
+  document.getElementById('overlay').classList.remove('hidden');
+  const title=document.getElementById('ov-title'),sub=document.getElementById('ov-sub');
+  const sc=document.getElementById('ov-score'),sclbl=document.getElementById('ov-score-label');
+  const newb=document.getElementById('ov-newbest'),playbtn=document.getElementById('ov-play-btn');
+  sc.style.display='none';sclbl.style.display='none';newb.style.display='none';
+  if(type==='ready'){
+    title.textContent='Ready?';
+    sub.textContent=isDesktop()?'Arrow keys or WASD to move':'D-pad, swipe, or arrow keys';
+    playbtn.textContent='Play';playbtn.onclick=resetGame;
+  }else if(type==='paused'){
+    title.textContent='Paused';sub.textContent='Take a breather...';
+    playbtn.textContent='Resume';playbtn.onclick=pauseGame;
+  }else if(type==='gameover'){
+    title.textContent='Game Over';
+    sc.textContent=score;sc.style.display='block';sclbl.style.display='block';
+    if(isNewBest)newb.style.display='block';
+    sub.textContent='Better luck next time!';
+    playbtn.textContent='Play Again';playbtn.onclick=resetGame;
+  }
+}
+function hideOverlay(){document.getElementById('overlay').classList.add('hidden');}
+
+/* ═══ DRAW ═══ */
+function drawBoard(){
+  const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),col=COLORS[cfg.colorIdx];
+  ctx.fillStyle='#0d0d0d';ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(cfg.showGrid){
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=0.5;
+    for(let i=0;i<=COLS;i++){ctx.beginPath();ctx.moveTo(i*CS,0);ctx.lineTo(i*CS,canvas.height);ctx.stroke();}
+    for(let j=0;j<=ROWS;j++){ctx.beginPath();ctx.moveTo(0,j*CS);ctx.lineTo(canvas.width,j*CS);ctx.stroke();}
+  }
+  snake.forEach((seg,i)=>{
+    ctx.fillStyle=i===0?col.head:col.snake;
+    ctx.globalAlpha=i===0?1:Math.max(0.55,1-i*0.015);
+    ctx.beginPath();ctx.roundRect(seg.x*CS+1,seg.y*CS+1,CS-2,CS-2,i===0?Math.ceil(CS*0.3):Math.ceil(CS*0.2));ctx.fill();
+    if(i===0){
+      ctx.globalAlpha=1;ctx.fillStyle='#0d0d0d';
+      const ew=Math.max(2,CS*0.18);
+      const ex =dir.x===0?ew*1.5:dir.x===1?CS-ew*2.5:ew*1.5;
+      const ey =dir.y===0?ew*1.5:dir.y===1?CS-ew*2.5:ew*1.5;
+      const ex2=dir.x===0?CS-ew*2.5:ex,ey2=dir.y===0?CS-ew*2.5:ey;
+      ctx.beginPath();ctx.arc(seg.x*CS+ex, seg.y*CS+ey, ew,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(seg.x*CS+ex2,seg.y*CS+ey2,ew,0,Math.PI*2);ctx.fill();
+    }
+  });
+  ctx.globalAlpha=1;
+  ctx.font = `${CS * 0.8}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💩', food.x * CS + CS / 2, food.y * CS + CS / 2);
+}
+
+/* ═══ INPUT ═══ */
+function setDir(nx,ny){
+  if(nx===1&&dir.x===-1||nx===-1&&dir.x===1)return;
+  if(ny===1&&dir.y===-1||ny===-1&&dir.y===1)return;
+  nextDir={x:nx,y:ny};
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('screen-game').classList.contains('active'))return;
+  if((e.code==='Space'||e.code==='Enter')&&!gameRunning){resetGame();return;}
+  if(e.code==='Escape'||e.code==='KeyP'){pauseGame();return;}
+  if(e.code==='ArrowUp'   ||e.key==='w'){e.preventDefault();if(gameRunning&&!gamePaused)setDir(0,-1);}
+  if(e.code==='ArrowDown' ||e.key==='s'){e.preventDefault();if(gameRunning&&!gamePaused)setDir(0,1);}
+  if(e.code==='ArrowLeft' ||e.key==='a'){e.preventDefault();if(gameRunning&&!gamePaused)setDir(-1,0);}
+  if(e.code==='ArrowRight'||e.key==='d'){e.preventDefault();if(gameRunning&&!gamePaused)setDir(1,0);}
+});
+document.getElementById('dp-up').addEventListener('click',   ()=>{if(gameRunning&&!gamePaused)setDir(0,-1);});
+document.getElementById('dp-down').addEventListener('click', ()=>{if(gameRunning&&!gamePaused)setDir(0,1);});
+document.getElementById('dp-left').addEventListener('click', ()=>{if(gameRunning&&!gamePaused)setDir(-1,0);});
+document.getElementById('dp-right').addEventListener('click',()=>{if(gameRunning&&!gamePaused)setDir(1,0);});
+
+/* swipe on canvas */
+let tx0,ty0;
+document.getElementById('canvas').addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;},{passive:true});
+document.getElementById('canvas').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx0,dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)<12&&Math.abs(dy)<12)return;
+  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);else setDir(0,dy>0?1:-1);
+},{passive:true});
+
+/* ═══ SCORES ═══ */
+function renderScores(){
+  const el=document.getElementById('scores-list');
+  if(!scores.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🏆</div>No scores yet.<br>Play a game to get on the board!</div>';return;}
+  const sorted=[...scores].sort((a,b)=>b.score-a.score);
+  const rc=['gold','silver','bronze'];
+  el.innerHTML=sorted.map((s,i)=>`
+    <div class="score-row-item">
+      <div class="score-rank ${rc[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="score-info"><div class="score-difficulty">${s.speed} · ${s.grid}</div><div class="score-points">${s.score} pts</div></div>
+      <div class="score-date">${s.date}</div>
+    </div>`).join('');
+}
+function clearScores(){
+  if(!confirm('Clear all high scores?'))return;
+  scores=[];saveScores();renderScores();refreshMenu();
+}
+
+/* ═══ SETTINGS ═══ */
+function applySettingsUI(){
+  document.querySelectorAll('.speed-chip').forEach(el=>el.classList.toggle('active',+el.dataset.speed===cfg.speed));
+  document.getElementById('speed-sub').textContent=SPEED_DESCS[cfg.speed];
+  document.getElementById('toggle-wrap').classList.toggle('on',cfg.wrapWalls);
+  document.getElementById('toggle-grid').classList.toggle('on',cfg.showGrid);
+  document.getElementById('toggle-sound').classList.toggle('on',cfg.sound);
+  document.querySelectorAll('.size-chip').forEach(el=>el.classList.toggle('active',+el.dataset.grid===cfg.gridSize));
+  document.getElementById('grid-sub').textContent=cfg.gridSize+'×'+cfg.gridSize+' cells';
+  renderSwatches();
+}
+function setSpeed(i){cfg.speed=i;saveCfg();document.querySelectorAll('.speed-chip').forEach(el=>el.classList.toggle('active',+el.dataset.speed===i));document.getElementById('speed-sub').textContent=SPEED_DESCS[i];}
+function toggleWrap() {cfg.wrapWalls=!cfg.wrapWalls;saveCfg();document.getElementById('toggle-wrap').classList.toggle('on',cfg.wrapWalls);}
+function toggleGrid() {cfg.showGrid=!cfg.showGrid;  saveCfg();document.getElementById('toggle-grid').classList.toggle('on',cfg.showGrid);}
+function toggleSound(){cfg.sound=!cfg.sound;        saveCfg();document.getElementById('toggle-sound').classList.toggle('on',cfg.sound);}
+function setGrid(n){cfg.gridSize=n;saveCfg();document.querySelectorAll('.size-chip').forEach(el=>el.classList.toggle('active',+el.dataset.grid===n));document.getElementById('grid-sub').textContent=n+'×'+n+' cells';}
+function renderSwatches(){
+  document.getElementById('color-swatches').innerHTML=COLORS.map((c,i)=>`<div class="swatch ${i===cfg.colorIdx?'active':''}" style="background:${c.snake}" title="${c.label}" onclick="setColor(${i})"></div>`).join('');
+}
+function setColor(i){cfg.colorIdx=i;saveCfg();renderSwatches();}
+
+/* ═══ BOOT ═══ */
+loadData();
+applySettingsUI();
+animateLoad();
+</script>
+</body>
+</html>
